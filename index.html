@@ -332,7 +332,7 @@
   .chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;}
   .chip{font-size:11px; font-weight:600; padding:5px 10px; border-radius:999px; background:var(--dark-5); color:var(--dark-60); border:none; cursor:pointer; font-family:inherit;}
   .vrow{display:flex; align-items:center; gap:8px; margin-top:8px;}
-  .vrow input[type=text]{width:88px; background:#fff; border:1px solid var(--dark-10); border-radius:10px; padding:8px 10px; font-size:13px; outline:none; font-family:inherit;}
+  .vrow input[type=text]{width:120px; flex-shrink:0; min-width:0; background:#fff; border:1px solid var(--dark-10); border-radius:10px; padding:8px 10px; font-size:13px; outline:none; font-family:inherit;}
   .vrow select{width:100px; background:#fff; border:1px solid var(--dark-10); border-radius:10px; padding:8px 10px; font-size:13px; outline:none; font-family:inherit; flex-shrink:0;}
   .vrow input[type=number]{flex:1; background:#fff; border:1px solid var(--dark-10); border-radius:10px; padding:8px 10px; font-size:13px; outline:none; font-family:inherit;}
   .vrow button{width:32px; height:32px; border-radius:10px; background:var(--danger-10); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;}
@@ -596,7 +596,6 @@
 
 <script>
 const STORAGE_KEY = 'khang-sinkha-products-v1';
-const SIZE_OPTIONS = ['S','M','L','XL','XXL','3XL','4XL','Free'];
 const CATEGORIES_KEY = 'khang-sinkha-categories-v1';
 let CATEGORIES = [];
 try{ CATEGORIES = JSON.parse(localStorage.getItem(CATEGORIES_KEY) || 'null') || ['ໝວດຊຸດໂຮງງານ', 'ໝວດຊຸດເຊບຕີ້']; }
@@ -1419,14 +1418,13 @@ function renderOrdersList(){
       const hasDiscount = getOrderDiscountPerUnit(realQty) > 0;
       return `
       <div class="report-card" style="margin-bottom:12px; padding:0; overflow:hidden;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; background:var(--order-header-color, #DBB994); padding:16px;">
+        <div style="position:relative; display:flex; justify-content:space-between; align-items:flex-start; gap:8px; background:var(--order-header-color, #DBB994); padding:16px 12px 46px 16px;">
           <div style="min-width:0;">
             <p style="font-weight:700; font-size:15px; margin:0; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
               <span>${esc(o.customerName)}</span>
               ${freeShip ? `<span style="background:rgba(154,201,59,.85); color:var(--dark); font-size:9px; font-weight:700; padding:2px 7px; border-radius:999px; white-space:nowrap;">ສົ່ງຟຣີ</span>` : ''}
               ${q ? `<span style="background:var(--dark); color:#fff; font-size:9px; font-weight:700; padding:2px 7px; border-radius:999px; white-space:nowrap;">${esc(new Date(o.createdAt).toLocaleDateString('lo-LA', { day:'2-digit', month:'2-digit', year:'numeric' }))}</span>` : ''}
               ${carrierLogoHtml(o.shippingCarrier)}
-              <button type="button" class="order-icon-btn" style="color:#2F6FED; padding:0; width:22px; height:22px; flex-shrink:0;" data-action="share-order" data-id="${o.id}" title="ແຊຣ໌ບິນ">${ICONS.send}</button>
             </p>
             <p class="muted" style="margin:2px 0 0; color:var(--dark);">${esc(o.phone)}</p>
             ${(o.shippingCarrier || o.shippingBranch) ? `<p style="margin:2px 0 0; font-size:11px; font-weight:600; color:var(--dark);">${esc(o.shippingCarrier || '')}${o.shippingCarrier && o.shippingBranch ? ' - ' : ''}${esc(o.shippingBranch || '')}</p>` : ''}
@@ -1444,6 +1442,7 @@ function renderOrdersList(){
             <span style="font-size:19px; font-weight:800; color:#9AC93B; white-space:nowrap; line-height:1.1; -webkit-text-stroke:0.6px #fff; text-shadow:-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff, -1px 0 0 #fff, 1px 0 0 #fff;">${getOrderTotal(o).toLocaleString()} ກີບ</span>
             ${hasDiscount ? `<span style="background:#7B4B24; color:#fff; font-size:9px; font-weight:700; padding:2px 7px; border-radius:999px; white-space:nowrap;">ໄດ້ຮັບສ່ວນຫຼຸດ</span>` : ''}
           </div>
+          <button type="button" class="order-icon-btn" style="position:absolute; right:12px; bottom:10px; color:#2F6FED;" data-action="share-order" data-id="${o.id}" title="ແຊຣ໌ບິນ">${ICONS.send}</button>
         </div>
         <div style="padding:10px 16px 16px; background:var(--order-body-color, #F8E3C4);">
           ${o.items.map(it => `
@@ -4671,12 +4670,9 @@ function renderModal(){
 function renderVariants(){
   const container = document.getElementById('variants-container');
   container.innerHTML = formState.variants.map(v => {
-    const known = SIZE_OPTIONS.includes(v.size);
-    const extraOpt = (v.size && !known) ? `<option value="${esc(v.size)}" selected>${esc(v.size)}</option>` : '';
-    const opts = `<option value="">-- ຂະໜາດ --</option>` + extraOpt + SIZE_OPTIONS.map(s => `<option value="${esc(s)}" ${v.size===s?'selected':''}>${esc(s)}</option>`).join('');
     return `
     <div class="vrow" data-vid="${v.id}">
-      <select data-vfield="size">${opts}</select>
+      <input type="text" data-vfield="size" value="${esc(v.size)}" placeholder="ຂະໜາດ" maxlength="30" autocomplete="off">
       <input type="number" inputmode="numeric" value="${esc(v.qty)}" data-vfield="qty" placeholder="ຈຳນວນ">
       <button type="button" data-remove-variant="${v.id}" ${formState.variants.length<=1?'disabled':''}>${ICONS.trash}</button>
     </div>
@@ -4685,7 +4681,7 @@ function renderVariants(){
 
   container.querySelectorAll('.vrow').forEach(row=>{
     const vid = row.dataset.vid;
-    row.querySelector('[data-vfield="size"]').addEventListener('change', e=>{
+    row.querySelector('[data-vfield="size"]').addEventListener('input', e=>{
       const v = formState.variants.find(x=>x.id===vid); if(v) v.size = e.target.value;
     });
     row.querySelector('[data-vfield="qty"]').addEventListener('input', e=>{
@@ -4750,6 +4746,16 @@ function handleSubmit(e){
   const variants = f.variants
     .filter(v => v.size.trim() !== '' || f.variants.length === 1)
     .map(v => ({ id:v.id, size: v.size.trim() || 'ບໍລິການອື່ນ', qty: Math.max(0, parseInt(v.qty,10) || 0) }));
+
+  const seenSizes = new Set();
+  for(const v of variants){
+    const key = v.size.trim().toLowerCase();
+    if(seenSizes.has(key)){
+      if(errorEl){ errorEl.textContent = 'ຂະໜາດ "' + v.size + '" ໃສ່ຊ້ຳກັນ, ກະລຸນາປ່ຽນ ຫຼື ລຶບແຖວທີ່ຊ້ຳອອກ'; errorEl.style.display = 'block'; }
+      return;
+    }
+    seenSizes.add(key);
+  }
 
   const codeTrim = f.code.trim();
   if(codeTrim){
