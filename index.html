@@ -5684,10 +5684,23 @@ async function pullFirebaseNow(){
   }
 }
 
+/* ຮັບໄດ້ທັງ JSON ແລະ ໂຄ້ດທີ່ copy ມາຈາກໜ້າ Firebase ໂດຍກົງ (const firebaseConfig = { apiKey: "..." ... }) */
+function parseFirebaseConfigText(text){
+  text = String(text || '').trim();
+  if(!text) return null;
+  try{ const j = JSON.parse(text); if(j && typeof j === 'object') return j; }catch(e){}
+  const body = (text.match(/\{[\s\S]*\}/) || [text])[0];
+  const out = {};
+  const re = /["']?([A-Za-z_$][\w$]*)["']?\s*:\s*(["'`])([\s\S]*?)\2/g;
+  let m;
+  while((m = re.exec(body))){ out[m[1]] = m[3].trim(); }
+  return Object.keys(out).length ? out : null;
+}
+
 async function enableFirebaseSync(configText){
   let config;
-  try{ config = JSON.parse(configText); }
-  catch(e){ showToast('ຮູບແບບ Firebase config ບໍ່ຖືກຕ້ອງ (ຕ້ອງເປັນ JSON)'); return false; }
+  config = parseFirebaseConfigText(configText);
+  if(!config){ showToast('ອ່ານ Firebase config ບໍ່ໄດ້ — ກະລຸນາ copy ສ່ວນ firebaseConfig = { ... } ມາວາງທັງໝົດ'); return false; }
   if(!config.apiKey || !config.projectId){ showToast('Firebase config ຂາດຂໍ້ມູນສຳຄັນ (apiKey/projectId)'); return false; }
   localStorage.setItem(FIREBASE_CONFIG_KEY, JSON.stringify(config));
   localStorage.setItem(FIREBASE_ENABLED_KEY, '1'); // tentative — rolled back below if the write check fails
